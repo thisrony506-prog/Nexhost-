@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="bn" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#050508">
+  <meta name="description" content="Adly - Ad Rating Platform. Earn USDT by rating ads.">
+  
+  <title>Adly — Ad Rating Platform</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="images/logo.png">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+  
+  <!-- Preconnect for Performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://www.gstatic.com">
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Tailwind CSS (CDN for demo - use build for production) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bg: '#050508', sf: '#0a0a10', cd: '#0f0f18', bd: '#1a1a28', bd2: '#242438',
+            em: '#00FF88', emD: '#00CC6A', emL: '#7AFFBE',
+            gd: '#FFD700', gdD: '#FF9500',
+            wr: '#FF6B35', dn: '#FF3366',
+            if: '#00D4FF', pp: '#BD00FF',
+            tp: '#F0F0FF', ts: '#6B6B8A', tm: '#4A4A6A'
+          },
+          fontFamily: {
+            outfit: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            bengali: ['Noto Sans Bengali', 'Outfit', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+    <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+
+<body class="min-h-screen relative font-outfit bg-bg text-tp overflow-x-hidden">
+
+  <!-- ═══════════ SPLASH SCREEN ═══════════ -->
+  <div id="splash" class="splash-screen">
+    <div class="splash-content">
+      <div class="splash-logo-wrapper">
+        <div class="splash-logo-glow"></div>
+        <img src="images/splash.png" class="splash-logo" 
+             onerror="this.outerHTML='<div class=\'splash-logo-fallback\'><i class=\'fas fa-bolt\'></i></div>'" 
+             alt="Adly Logo">
+      </div>
+      <h1 class="splash-title">ADLY</h1>
+      <p class="splash-subtitle">Ad Rating Platform</p>
+      <div class="splash-progress">
+        <div class="splash-progress-bar"></div>
+      </div>
+      <p class="splash-loading">Initializing...</p>
+    </div>
+  </div>
+
+  <!-- ═══════════ AMBIENT BACKGROUND ═══════════ -->
+  <div class="ambient-bg">
+    <div class="ambient-blob blob-1"></div>
+    <div class="ambient-blob blob-2"></div>
+    <div class="ambient-blob blob-3"></div>
+    <div class="ambient-grid"></div>
+  </div>
+
+  <!-- ═══════════ TOAST CONTAINER ═══════════ -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ═══════════ AUTH SCREEN ═══════════ -->
+  <div id="authScreen" class="auth-screen hidden">
+    <div class="auth-wrapper">
+      
+      <!-- Logo Section -->
+      <div class="auth-logo-section animate-fade-in">
+        <div class="auth-logo-glow"></div>        <img src="images/logo.png" class="auth-logo" 
+             onerror="this.outerHTML='<div class=\'auth-logo-fallback\'><i class=\'fas fa-bolt\'></i></div>'" 
+             alt="Adly">
+        <h1 class="auth-title">ADLY</h1>
+        <p class="auth-subtitle">Ad Rating Platform</p>
+      </div>
+
+      <!-- Auth Tabs -->
+      <div class="auth-tabs glass rounded-2xl p-1 mb-6 animate-fade-in" style="animation-delay: 0.1s">
+        <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">
+          <i class="fas fa-right-to-bracket mr-2"></i>লগইন
+        </button>
+        <button class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">
+          <i class="fas fa-user-plus mr-2"></i>রেজিস্ট্রেশন
+        </button>
+        <div class="auth-tab-indicator" id="tabIndicator"></div>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" class="auth-form active" onsubmit="handleLogin(event)">
+        <div class="form-header mb-5">
+          <h2 class="text-lg font-bold">স্বাগতম ফিরে! 👋</h2>
+          <p class="text-xs text-ts">আপনার অ্যাকাউন্টে লগইন করুন</p>
+        </div>
+
+        <!-- Email/Phone Input -->
+        <div class="input-group">
+          <label class="input-label">ইমেইল বা ফোন নম্বর</label>
+          <div class="input-wrapper">
+            <select class="country-select" id="loginCountry">
+              <option value="+880">🇧🇩 +880</option>
+              <option value="+1">🇺🇸 +1</option>
+              <option value="+44">🇬🇧 +44</option>
+              <option value="+91">🇮🇳 +91</option>
+              <option value="+92">🇵🇰 +92</option>
+              <option value="+966">🇸🇦 +966</option>
+              <option value="+971">🇦🇪 +971</option>
+            </select>
+            <input type="text" class="input-field" id="loginIdentifier" 
+                   placeholder="01XXXXXXXXX / email@example.com"
+                   autocomplete="username" required>
+            <i class="fas fa-user input-icon"></i>
+          </div>
+          <span class="error-message" id="loginIdentifierError"></span>
+        </div>
+
+        <!-- Password Input -->
+        <div class="input-group">
+          <label class="input-label">পাসওয়ার্ড</label>
+          <div class="input-wrapper input-password">            <input type="password" class="input-field" id="loginPassword" 
+                   placeholder="••••••••" autocomplete="current-password" required>
+            <button type="button" class="password-toggle" onclick="togglePassword('loginPassword', this)">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          <span class="error-message" id="loginPasswordError"></span>
+        </div>
+
+        <!-- Remember & Forgot -->
+        <div class="auth-options">
+          <label class="checkbox-wrapper">
+            <input type="checkbox" id="rememberMe">
+            <span class="checkmark"></span>
+            <span class="checkbox-label">মনে রাখুন</span>
+          </label>
+          <button type="button" class="forgot-link" onclick="openForgotModal()">
+            <i class="fas fa-key mr-1"></i>পাসওয়ার্ড ভুলে গেছেন?
+          </button>
+        </div>
+
+        <!-- Login Button -->
+        <button type="submit" class="btn-primary" id="loginBtn">
+          <span class="btn-text"><i class="fas fa-right-to-bracket mr-2"></i>লগইন করুন</span>
+          <span class="btn-loading hidden"><i class="fas fa-spinner fa-spin mr-2"></i>যাচাই হচ্ছে...</span>
+        </button>
+
+        <!-- Divider -->
+        <div class="auth-divider">
+          <span>অথবা লগইন করুন</span>
+        </div>
+
+        <!-- Social Login -->
+        <div class="social-login">
+          <button type="button" class="social-btn google" onclick="socialLogin('google')">
+            <i class="fab fa-google"></i>
+            <span>Google</span>
+          </button>
+          <button type="button" class="social-btn facebook" onclick="socialLogin('facebook')">
+            <i class="fab fa-facebook-f"></i>
+            <span>Facebook</span>
+          </button>
+        </div>
+
+        <!-- Register Link -->
+        <p class="auth-switch">
+          অ্যাকাউন্ট নেই? 
+          <button type="button" class="link-btn" onclick="switchAuthTab('register')">
+            রেজিস্ট্রেশন করুন →
+          </button>        </p>
+      </form>
+
+      <!-- Register Form -->
+      <form id="registerForm" class="auth-form" onsubmit="handleRegister(event)">
+        <div class="form-header mb-5">
+          <h2 class="text-lg font-bold">নতুন অ্যাকাউন্ট তৈরি করুন 🚀</h2>
+          <p class="text-xs text-ts">আপনার তথ্য দিন এবং আয় শুরু করুন</p>
+        </div>
+
+        <!-- Name Input -->
+        <div class="input-group">
+          <label class="input-label">পূর্ণ নাম <span class="text-ts text-xs">(বাংলা বা ইংরেজি)</span></label>
+          <input type="text" class="input-field" id="regName" 
+                 placeholder="আপনার নাম লিখুন" maxlength="50" required>
+          <i class="fas fa-user input-icon"></i>
+          <span class="error-message" id="regNameError"></span>
+        </div>
+
+        <!-- Email Input -->
+        <div class="input-group">
+          <label class="input-label">ইমেইল <span class="text-ts text-xs">(ঐচ্ছিক কিন্তু রিকমেন্ডেড)</span></label>
+          <input type="email" class="input-field" id="regEmail" 
+                 placeholder="example@email.com" autocomplete="email">
+          <i class="fas fa-envelope input-icon"></i>
+          <span class="error-message" id="regEmailError"></span>
+        </div>
+
+        <!-- Phone Input -->
+        <div class="input-group">
+          <label class="input-label">ফোন নম্বর</label>
+          <div class="input-wrapper">
+            <select class="country-select" id="regCountry" onchange="updatePhonePlaceholder()">
+              <option value="+880" data-len="10">🇧🇩 +880</option>
+              <option value="+1" data-len="10">🇺🇸 +1</option>
+              <option value="+44" data-len="10">🇬🇧 +44</option>
+              <option value="+91" data-len="10">🇮🇳 +91</option>
+              <option value="+92" data-len="10">🇵🇰 +92</option>
+              <option value="+966" data-len="9">🇸🇦 +966</option>
+              <option value="+971" data-len="9">🇦🇪 +971</option>
+              <option value="+60" data-len="9">🇲🇾 +60</option>
+              <option value="+63" data-len="10">🇵🇭 +63</option>
+            </select>
+            <input type="tel" class="input-field" id="regPhone" 
+                   placeholder="01XXXXXXXXX" maxlength="15" required>
+            <i class="fas fa-phone input-icon"></i>
+          </div>
+          <span class="error-message" id="regPhoneError"></span>
+        </div>
+        <!-- Password Input with Strength -->
+        <div class="input-group">
+          <label class="input-label">পাসওয়ার্ড</label>
+          <div class="input-wrapper input-password">
+            <input type="password" class="input-field" id="regPassword" 
+                   placeholder="কমপক্ষে ৮ অক্ষর" autocomplete="new-password" required>
+            <button type="button" class="password-toggle" onclick="togglePassword('regPassword', this)">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          <div class="password-strength">
+            <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+            <span class="strength-text" id="strengthText"></span>
+          </div>
+          <span class="error-message" id="regPasswordError"></span>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="input-group">
+          <label class="input-label">পাসওয়ার্ড নিশ্চিত করুন</label>
+          <div class="input-wrapper input-password">
+            <input type="password" class="input-field" id="regConfirmPassword" 
+                   placeholder="পুনরায় টাইপ করুন" autocomplete="new-password" required>
+            <button type="button" class="password-toggle" onclick="togglePassword('regConfirmPassword', this)">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          <span class="error-message" id="regConfirmPasswordError"></span>
+        </div>
+
+        <!-- Security PIN -->
+        <div class="input-group">
+          <label class="input-label">সিকিউরিটি PIN 
+            <span class="text-ts text-xs">(৬ সংখ্যা — উত্তোলনে প্রয়োজন)</span>
+          </label>
+          <input type="password" class="input-field text-center tracking-widest" 
+                 id="regPin" placeholder="• • • • • •" maxlength="6" 
+                 pattern="\d{6}" title="৬টি সংখ্যা দিন" required>
+          <div class="pin-dots">
+            <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+            <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+          </div>
+          <span class="error-message" id="regPinError"></span>
+        </div>
+
+        <!-- Referral Code -->
+        <div class="input-group">
+          <label class="input-label">রেফারেল কোড <span class="text-ts text-xs">(ঐচ্ছিক)</span></label>
+          <div class="input-wrapper">
+            <input type="text" class="input-field font-mono uppercase" id="regReferral"                    placeholder="ADL-XXXXXX" maxlength="10" pattern="ADL-\d{6}">
+            <i class="fas fa-gift input-icon text-em" id="referralIcon" style="display:none"></i>
+          </div>
+          <span class="error-message" id="regReferralError"></span>
+          <div class="referral-bonus hidden" id="referralBonus">
+            <i class="fas fa-gift text-em mr-1"></i>
+            <strong>রেফারেল বোনাস:</strong> $0.50 সক্রিয়!
+          </div>
+        </div>
+
+        <!-- Terms Agreement -->
+        <div class="input-group">
+          <label class="checkbox-wrapper terms-checkbox">
+            <input type="checkbox" id="agreeTerms" required>
+            <span class="checkmark"></span>
+            <span class="checkbox-label">
+              আমি <button type="button" class="link-inline" onclick="openModal('terms')">Terms of Service</button> এবং 
+              <button type="button" class="link-inline" onclick="openModal('privacy')">Privacy Policy</button> 
+              পড়েছি এবং সম্মত আছি
+            </span>
+          </label>
+          <span class="error-message" id="agreeTermsError"></span>
+        </div>
+
+        <!-- Register Button -->
+        <button type="submit" class="btn-primary" id="registerBtn">
+          <span class="btn-text"><i class="fas fa-user-plus mr-2"></i>অ্যাকাউন্ট তৈরি করুন</span>
+          <span class="btn-loading hidden"><i class="fas fa-spinner fa-spin mr-2"></i>তৈরি হচ্ছে...</span>
+        </button>
+
+        <!-- Login Link -->
+        <p class="auth-switch">
+          ইতিমধ্যে অ্যাকাউন্ট আছে? 
+          <button type="button" class="link-btn" onclick="switchAuthTab('login')">
+            ← লগইন করুন
+          </button>
+        </p>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ═══════════ MAIN APP ═══════════ -->
+  <div id="mainApp" class="main-app hidden">
+    
+    <!-- Header -->
+    <header class="app-header glass">
+      <div class="header-content">
+        <div class="header-left">
+          <img src="images/logo.png" class="header-logo" alt="Adly">          <div class="header-greeting">
+            <p class="greeting-time" id="greetingTime">শুভ সকাল</p>
+            <h1 class="app-name">ADLY</h1>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn" onclick="openCheckIn()" title="Daily Check-in">
+            <i class="fas fa-calendar-check"></i>
+            <span class="notification-dot hidden" id="checkInDot"></span>
+          </button>
+          <div class="dropdown-wrapper" id="langDropdown">
+            <button class="header-btn" onclick="toggleDropdown('lang')" title="Language">
+              <i class="fas fa-globe"></i>
+            </button>
+            <div class="dropdown-menu" id="langMenu">
+              <button class="dropdown-item active" data-lang="bn" onclick="setLanguage('bn')">
+                <span>🇧🇩</span> বাংলা
+              </button>
+              <button class="dropdown-item" data-lang="en" onclick="setLanguage('en')">
+                <span>🇺🇸</span> English
+              </button>
+              <button class="dropdown-item" data-lang="ar" onclick="setLanguage('ar')">
+                <span>🇸🇦</span> العربية
+              </button>
+              <button class="dropdown-item" data-lang="hi" onclick="setLanguage('hi')">
+                <span>🇮🇳</span> हिन्दी
+              </button>
+            </div>
+          </div>
+          <button class="header-btn" onclick="openNotifications()" title="Notifications">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge" id="notifBadge">3</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Pages Container -->
+    <main class="app-content">
+      
+      <!-- Home Page -->
+      <section id="page-home" class="page active">
+        
+        <!-- Banner Carousel -->
+        <div class="banner-carousel glass rounded-2xl overflow-hidden mb-4">
+          <div class="banner-track" id="bannerTrack">
+            <div class="banner-slide">
+              <img src="images/banner-1.jpg" class="banner-image" alt="Earn Daily">
+              <div class="banner-overlay">
+                <span class="badge badge-em"><i class="fas fa-bolt"></i> ADLY</span>                <h2>বিজ্ঞাপন রেট করুন<br><span class="text-em">প্রতিদিন আয় করুন</span></h2>
+              </div>
+            </div>
+            <div class="banner-slide">
+              <img src="images/banner-2.jpg" class="banner-image" alt="Secure Platform">
+              <div class="banner-overlay">
+                <span class="badge badge-if"><i class="fas fa-shield"></i> SECURE</span>
+                <h2>কঠোর নিরাপত্তা<br><span class="text-if">বিশ্বস্তার সুরক্ষা</span></h2>
+              </div>
+            </div>
+            <div class="banner-slide">
+              <img src="images/banner-3.jpg" class="banner-image" alt="Upgrade Plans">
+              <div class="banner-overlay">
+                <span class="badge badge-pp"><i class="fas fa-crown"></i> PLANS</span>
+                <h2>আপগ্রেড করুন<br><span class="text-pp">আরও বেশি আয়</span></h2>
+              </div>
+            </div>
+          </div>
+          <div class="banner-dots" id="bannerDots">
+            <button class="banner-dot active" onclick="goToSlide(0)"></button>
+            <button class="banner-dot" onclick="goToSlide(1)"></button>
+            <button class="banner-dot" onclick="goToSlide(2)"></button>
+          </div>
+        </div>
+
+        <!-- Balance Card -->
+        <div class="balance-card glass-em rounded-2xl p-4 glow-em mb-4">
+          <div class="balance-grid">
+            <div>
+              <p class="balance-label">আজকের আয়</p>
+              <p class="balance-amount" id="todayEarnings">$0.00</p>
+            </div>
+            <div class="balance-divider"></div>
+            <div>
+              <p class="balance-label">টাস্ক</p>
+              <p class="balance-tasks" id="taskProgress">0/0</p>
+            </div>
+            <div class="balance-divider"></div>
+            <div>
+              <p class="balance-label">ব্যালেন্স</p>
+              <p class="balance-total" id="totalBalance">$0.00</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions grid grid-cols-4 gap-2 mb-4">
+          <button class="action-btn" onclick="openDeposit()">
+            <div class="action-icon bg-em/10 text-em">
+              <i class="fas fa-wallet"></i>            </div>
+            <span class="action-label">তহবিল</span>
+          </button>
+          <button class="action-btn" onclick="openWithdraw()">
+            <div class="action-icon bg-wr/10 text-wr">
+              <i class="fas fa-arrow-up-from-bracket"></i>
+            </div>
+            <span class="action-label">প্রত্যাহার</span>
+          </button>
+          <button class="action-btn" onclick="openAIRobot()">
+            <div class="action-icon bg-if/10 text-if">
+              <i class="fas fa-robot"></i>
+            </div>
+            <span class="action-label">AI রোবট</span>
+          </button>
+          <button class="action-btn" onclick="openIncome()">
+            <div class="action-icon bg-pp/10 text-pp">
+              <i class="fas fa-chart-pie"></i>
+            </div>
+            <span class="action-label">আয়ের উৎস</span>
+          </button>
+        </div>
+
+        <!-- Plan Badge -->
+        <div id="planBadge" class="mb-4"></div>
+
+        <!-- Live Feed -->
+        <section class="section">
+          <div class="section-header">
+            <div class="section-title">
+              <div class="pulse-dot bg-em"></div>
+              <h3>লাইভ ফিড</h3>
+            </div>
+            <span class="section-subtitle">রিয়েল-টাইম</span>
+          </div>
+          <div class="live-feed glass rounded-2xl p-3" id="liveFeed">
+            <!-- Dynamic content -->
+          </div>
+        </section>
+
+        <!-- Ads Marketplace -->
+        <section class="section">
+          <div class="section-header">
+            <h3><i class="fas fa-rectangle-ad mr-2"></i>বিজ্ঞাপন মার্কেটপ্লেস</h3>
+            <div class="section-actions">
+              <span class="task-count mono" id="homeTaskCount">0/0</span>
+              <button class="btn-sm" onclick="refreshAds()">
+                <i class="fas fa-sync-alt mr-1"></i>Refresh
+              </button>
+            </div>          </div>
+          <div class="ads-list" id="adsList">
+            <!-- Dynamic ad cards -->
+          </div>
+          <div class="empty-state hidden" id="adsEmpty">
+            <div class="empty-icon">
+              <i class="fas fa-check-double"></i>
+            </div>
+            <p class="empty-title">সব টাস্ক সম্পন্ন!</p>
+            <p class="empty-text">আগামীকাল আবার আসুন</p>
+            <p class="empty-earnings">আজকের আয়: <strong class="text-em" id="emptyEarnings">$0.00</strong></p>
+          </div>
+        </section>
+
+        <!-- Recent Activity -->
+        <section class="section">
+          <div class="section-header">
+            <h3 class="text-ts">সাম্প্রতিক কার্যক্রম</h3>
+            <button class="btn-link" onclick="openTransactionLog()">সব দেখুন</button>
+          </div>
+          <div class="activity-list glass rounded-2xl p-3" id="recentActivity">
+            <!-- Dynamic content -->
+          </div>
+        </section>
+
+      </section>
+
+      <!-- Jobs Page -->
+      <section id="page-jobs" class="page">
+        <div class="page-header">
+          <h1 class="page-title">চাকরি</h1>
+          <p class="page-subtitle">প্ল্যান কিনতে পর্যাপ্ত ব্যালেন্স প্রয়োজন</p>
+        </div>
+
+        <!-- Warning Alert -->
+        <div class="alert alert-danger mb-4">
+          <i class="fas fa-shield-halved mr-2"></i>
+          একটি অ্যাকাউন্টে একটিমাত্র সক্রিয় প্ল্যান। একাধিক অ্যাকাউন্ট = স্থায়ী নিষেধাজ্ঞা।
+        </div>
+
+        <!-- Countdown Card -->
+        <div class="countdown-card glass rounded-2xl p-4 mb-4">
+          <div class="countdown-wrapper">
+            <svg class="countdown-ring" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="54" class="countdown-bg"/>
+              <circle cx="60" cy="60" r="54" class="countdown-progress" 
+                      id="countdownProgress" stroke-dasharray="339.29" stroke-dashoffset="0"/>
+            </svg>
+            <div class="countdown-content">
+              <p class="countdown-label">কাউন্টডাউন</p>              <p class="countdown-time mono" id="countdownTime">24:00:00</p>
+              <p class="countdown-sub">পরবর্তী রিসেট</p>
+            </div>
+          </div>
+          <div class="countdown-stats grid grid-cols-2 gap-2 mt-4">
+            <div class="stat-box">
+              <p class="stat-label">আজকের আয়</p>
+              <p class="stat-value text-em" id="jobsTodayEarnings">$0.00</p>
+            </div>
+            <div class="stat-box">
+              <p class="stat-label">সঞ্চিত আয়</p>
+              <p class="stat-value" id="jobsTotalEarnings">$0.00</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Current Plan -->
+        <div id="currentPlanCard" class="glass-em rounded-2xl p-4 glow-em mb-4">
+          <!-- Dynamic content -->
+        </div>
+
+        <!-- Plans List -->
+        <div class="section-header">
+          <h3 class="text-ts">প্ল্যান সমূহ</h3>
+          <span class="badge badge-if">আপগ্রেড সম্ভব</span>
+        </div>
+        <div class="plans-list" id="plansList">
+          <!-- Dynamic plan cards -->
+        </div>
+      </section>
+
+      <!-- Invite Page -->
+      <section id="page-invite" class="page">
+        <div class="page-header">
+          <h1 class="page-title">বন্ধুদের আমন্ত্রণ</h1>
+        </div>
+
+        <!-- Referral Card -->
+        <div class="referral-card glass-em rounded-2xl p-4 glow-em mb-4">
+          <div class="referral-header">
+            <div class="referral-icon">
+              <i class="fas fa-gift"></i>
+            </div>
+            <div>
+              <h3 class="referral-title">মাল্টি-লেভেল কমিশন</h3>
+              <p class="referral-sub">আমন্ত্রণ করুন, আয় করুন</p>
+            </div>
+          </div>
+          
+          <div class="referral-code glass rounded-xl p-3 text-center my-4">            <p class="referral-label">আমন্ত্রণ কোড</p>
+            <p class="referral-code-value mono" id="myRefCode">ADL-000000</p>
+          </div>
+          
+          <div class="referral-actions grid grid-cols-2 gap-2 mb-4">
+            <button class="btn-primary py-2.5" onclick="copyReferralLink()">
+              <i class="fas fa-copy mr-2"></i>লিংক কপি
+            </button>
+            <button class="btn-secondary py-2.5" onclick="showQRCode()">
+              <i class="fas fa-qrcode mr-2"></i>QR কোড
+            </button>
+          </div>
+          
+          <div class="referral-share grid grid-cols-3 gap-2">
+            <button class="share-btn" onclick="shareReferral('whatsapp')">
+              <i class="fab fa-whatsapp"></i>
+              <span>WhatsApp</span>
+            </button>
+            <button class="share-btn" onclick="shareReferral('telegram')">
+              <i class="fab fa-telegram"></i>
+              <span>Telegram</span>
+            </button>
+            <button class="share-btn" onclick="shareReferral('facebook')">
+              <i class="fab fa-facebook"></i>
+              <span>Facebook</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Commission Rates -->
+        <div class="glass rounded-2xl p-4 mb-4">
+          <h3 class="section-title mb-3"><i class="fas fa-percentage mr-2"></i>কমিশন হার</h3>
+          <div class="commission-list">
+            <div class="commission-item bg-em/5 border-em/20">
+              <div class="commission-level bg-em/20 text-em">L1</div>
+              <div class="commission-info">
+                <p class="commission-name">সরাসরি</p>
+                <p class="commission-desc">Direct Invite</p>
+              </div>
+              <p class="commission-rate text-em">4%</p>
+            </div>
+            <div class="commission-item bg-if/5 border-if/20">
+              <div class="commission-level bg-if/20 text-if">L2</div>
+              <div class="commission-info">
+                <p class="commission-name">দ্বিতীয়</p>
+                <p class="commission-desc">2nd Level</p>
+              </div>
+              <p class="commission-rate text-if">2%</p>
+            </div>
+            <div class="commission-item bg-pp/5 border-pp/20">              <div class="commission-level bg-pp/20 text-pp">L3</div>
+              <div class="commission-info">
+                <p class="commission-name">তৃতীয়</p>
+                <p class="commission-desc">3rd Level</p>
+              </div>
+              <p class="commission-rate text-pp">1%</p>
+            </div>
+          </div>
+          <div class="alert alert-success mt-3">
+            <i class="fas fa-trophy mr-2"></i>
+            ম্যানেজমেন্ট বোনাস: টিম আয়ের <strong>1%</strong>
+          </div>
+        </div>
+
+        <!-- Team Tracker -->
+        <div class="glass rounded-2xl p-4 mb-4">
+          <h3 class="section-title mb-3"><i class="fas fa-users mr-2"></i>টিম ট্র্যাকার</h3>
+          <div class="team-stats grid grid-cols-3 gap-2 mb-3">
+            <div class="stat-box">
+              <p class="stat-label">L1</p>
+              <p class="stat-value mono" id="teamL1">0</p>
+            </div>
+            <div class="stat-box">
+              <p class="stat-label">L2</p>
+              <p class="stat-value mono" id="teamL2">0</p>
+            </div>
+            <div class="stat-box">
+              <p class="stat-label">L3</p>
+              <p class="stat-value mono" id="teamL3">0</p>
+            </div>
+          </div>
+          <div class="stat-box flex justify-between">
+            <span class="text-ts">আজকের কমিশন</span>
+            <span class="text-em mono" id="teamTodayCommission">$0.00</span>
+          </div>
+        </div>
+
+        <!-- Recent Joins -->
+        <div class="glass rounded-2xl p-4">
+          <h3 class="section-title mb-3">সাম্প্রতিক যোগদান</h3>
+          <div class="team-list" id="teamList">
+            <!-- Dynamic content -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Profile Page -->
+      <section id="page-profile" class="page">
+        <div class="page-header">
+          <h1 class="page-title">আমার প্রোফাইল</h1>        </div>
+
+        <!-- Profile Card -->
+        <div class="profile-card glass rounded-2xl p-4 text-center mb-4">
+          <div class="profile-avatar-wrapper">
+            <div class="profile-avatar" id="profileAvatar">A</div>
+            <div class="profile-verified">
+              <i class="fas fa-check"></i>
+            </div>
+          </div>
+          <h3 class="profile-name" id="profileName">User</h3>
+          <p class="profile-uid mono" id="profileUID">UID: 000000</p>
+          <p class="profile-phone mono" id="profilePhone">+880 0000000000</p>
+          <div class="profile-badges" id="profileBadges">
+            <!-- Dynamic badges -->
+          </div>
+        </div>
+
+        <!-- Wallet Section -->
+        <div class="glass rounded-2xl p-4 mb-4">
+          <div class="section-header mb-3">
+            <h3 class="section-title"><i class="fas fa-wallet mr-2"></i>ওয়ালেট</h3>
+            <span class="badge badge-em"><i class="fas fa-shield-halved"></i> সুরক্ষিত</span>
+          </div>
+          
+          <div class="wallet-list">
+            <div class="wallet-item">
+              <div class="wallet-icon bg-em/10 text-em">
+                <i class="fas fa-coins"></i>
+              </div>
+              <div class="wallet-info">
+                <p class="wallet-label">ব্যালেন্স</p>
+                <p class="wallet-desc">USDT Available</p>
+              </div>
+              <p class="wallet-amount text-em mono" id="walletBalance">$0.00</p>
+            </div>
+            <div class="wallet-item">
+              <div class="wallet-icon bg-em/10 text-em">
+                <i class="fas fa-users"></i>
+              </div>
+              <div class="wallet-info">
+                <p class="wallet-label">কমিশন</p>
+                <p class="wallet-desc">Referral Earnings</p>
+              </div>
+              <p class="wallet-amount text-em mono" id="walletCommission">$0.00</p>
+            </div>
+            <div class="wallet-item">
+              <div class="wallet-icon bg-wr/10 text-wr">
+                <i class="fas fa-lock"></i>
+              </div>              <div class="wallet-info">
+                <p class="wallet-label">ফ্রিজ</p>
+                <p class="wallet-desc">Pending Withdrawal</p>
+              </div>
+              <p class="wallet-amount text-wr mono" id="walletFrozen">$0.00</p>
+            </div>
+            <div class="wallet-item">
+              <div class="wallet-icon bg-if/10 text-if">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <div class="wallet-info">
+                <p class="wallet-label">বিনিয়োগ</p>
+                <p class="wallet-desc">Total Invested</p>
+              </div>
+              <p class="wallet-amount text-if mono" id="walletInvested">$0.00</p>
+            </div>
+          </div>
+          
+          <div class="wallet-actions grid grid-cols-2 gap-2 mt-3">
+            <button class="btn-primary" onclick="openDeposit()">
+              <i class="fas fa-plus mr-2"></i>জমা করুন
+            </button>
+            <button class="btn-outline text-wr border-wr/20 hover:border-wr/40" 
+                    onclick="openWithdraw()">
+              <i class="fas fa-arrow-up mr-2"></i>উত্তোলন
+            </button>
+          </div>
+        </div>
+
+        <!-- Analytics -->
+        <div class="glass rounded-2xl p-4 mb-4">
+          <h3 class="section-title mb-3"><i class="fas fa-chart-bar mr-2"></i>অ্যানালিটিক্স</h3>
+          <div class="analytics-grid grid grid-cols-2 gap-2">
+            <div class="stat-box">
+              <p class="stat-label">মোট আয়</p>
+              <p class="stat-value text-em mono" id="analyticsTotalEarnings">$0.00</p>
+            </div>
+            <div class="stat-box">
+              <p class="stat-label">মোট কমিশন</p>
+              <p class="stat-value text-em mono">$0.00</p>
+            </div>
+            <div class="stat-box">
+              <p class="stat-label">মোট ডিপোজিট</p>
+              <p class="stat-value mono" id="analyticsTotalDeposit">$0.00</p>
+            </div>
+            <div class="stat-box">
+              <p class="stat-label">মোট প্রত্যাহার</p>
+              <p class="stat-value text-wr mono" id="analyticsTotalWithdraw">$0.00</p>
+            </div>
+          </div>        </div>
+
+        <!-- Settings Menu -->
+        <div class="glass rounded-2xl p-2 mb-4">
+          <div class="menu-list">
+            <button class="menu-item" onclick="openAIRobot()">
+              <div class="menu-icon bg-if/10 text-if">
+                <i class="fas fa-robot"></i>
+              </div>
+              <span class="menu-label">AI রোবট</span>
+              <i class="fas fa-chevron-right menu-arrow"></i>
+            </button>
+            <button class="menu-item" onclick="openTransactionLog()">
+              <div class="menu-icon bg-em/10 text-em">
+                <i class="fas fa-clock-rotate-left"></i>
+              </div>
+              <span class="menu-label">লেনদেনের রেকর্ড</span>
+              <i class="fas fa-chevron-right menu-arrow"></i>
+            </button>
+            <button class="menu-item" onclick="openSecurity()">
+              <div class="menu-icon bg-wr/10 text-wr">
+                <i class="fas fa-shield-halved"></i>
+              </div>
+              <span class="menu-label">নিরাপত্তা</span>
+              <span class="menu-desc">PIN + ডিভাইস বাইন্ডিং</span>
+              <i class="fas fa-chevron-right menu-arrow"></i>
+            </button>
+            <button class="menu-item" onclick="openSupport()">
+              <div class="menu-icon bg-em/10 text-em">
+                <i class="fas fa-headset"></i>
+              </div>
+              <span class="menu-label">সাপোর্ট</span>
+              <span class="menu-desc">24/7</span>
+              <i class="fas fa-chevron-right menu-arrow"></i>
+            </button>
+            <button class="menu-item" onclick="toggleLanguageDropdown()">
+              <div class="menu-icon glass">
+                <i class="fas fa-language text-ts"></i>
+              </div>
+              <span class="menu-label">ভাষা</span>
+              <span class="menu-desc" id="currentLang">বাংলা</span>
+              <i class="fas fa-chevron-right menu-arrow"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Logout Button -->
+        <button class="btn-logout" onclick="handleLogout()">
+          <i class="fas fa-right-from-bracket mr-2"></i>প্রস্থান
+        </button>      </section>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav glass">
+      <button class="nav-item active" data-page="home" onclick="navigateTo('home')">
+        <i class="fas fa-house"></i>
+        <span>বাড়ি</span>
+      </button>
+      <button class="nav-item" data-page="jobs" onclick="navigateTo('jobs')">
+        <i class="fas fa-briefcase"></i>
+        <span>চাকরি</span>
+      </button>
+      <button class="nav-item" data-page="invite" onclick="navigateTo('invite')">
+        <i class="fas fa-user-group"></i>
+        <span>আমন্ত্রণ</span>
+      </button>
+      <button class="nav-item" data-page="profile" onclick="navigateTo('profile')">
+        <i class="fas fa-user-gear"></i>
+        <span>প্রোফাইল</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- ═══════════ MODALS ═══════════ -->
+  
+  <!-- Generic Modal -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
+    <div class="modal-content" id="modalContent">
+      <div class="modal-handle"></div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- QR Code Modal -->
+  <div class="modal-overlay" id="qrModal">
+    <div class="modal-content">
+      <div class="modal-handle"></div>
+      <div class="text-center p-4">
+        <h3 class="text-lg font-bold mb-4">QR কোড</h3>
+        <div class="qr-container bg-white rounded-2xl p-3 mx-auto mb-4" 
+             style="width: 160px; height: 160px">
+          <canvas id="qrCanvas" width="128" height="128"></canvas>
+        </div>
+        <p class="mono font-bold text-em text-lg tracking-wider" id="qrRefCode">ADL-000000</p>
+        <p class="text-xs text-ts mt-1">স্ক্যান করে Adly-তে যোগ দিন</p>
+        <button class="btn-primary mt-4" onclick="closeModal('qrModal')">বন্ধ করুন</button>
+      </div>    </div>
+  </div>
+
+  <!-- Terms/Privacy Modal -->
+  <div class="modal-overlay" id="infoModal">
+    <div class="modal-content max-h-[80vh] overflow-y-auto">
+      <div class="modal-handle"></div>
+      <div class="p-4" id="infoModalBody">
+        <!-- Dynamic content -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/firestore.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

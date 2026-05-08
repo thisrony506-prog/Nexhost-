@@ -1,0 +1,221 @@
+/* ═══════════════════════════════════════════════════════════
+   ADLY - Auth Page Styles
+   ═══════════════════════════════════════════════════════════ */
+
+/* ══════ Auth Screen Base ═════ */
+.auth-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0;
+  overflow-y: auto;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.auth-screen.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.auth-wrapper {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+}
+
+/* ══════ Auth Logo Section ═════ */
+.auth-logo-section {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32px;
+  margin-top: 24px;
+  padding-top: 16px;
+}
+
+.auth-logo-glow {
+  position: absolute;
+  inset: -24px;
+  background: radial-gradient(ellipse, rgba(0, 255, 136, 0.15) 0%, transparent 70%);
+  border-radius: 36px;
+  animation: glowPulse 3s ease-in-out infinite;
+  pointer-events: none;}
+
+.auth-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 22px;
+  object-fit: cover;
+  box-shadow: 0 0 40px rgba(0, 255, 136, 0.3);
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-logo-fallback {
+  width: 64px;
+  height: 64px;
+  border-radius: 22px;
+  background: var(--grad-em);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 900;
+  color: #000;
+  box-shadow: 0 0 40px rgba(0, 255, 136, 0.3);
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 8px;
+  background: linear-gradient(135deg, var(--em), var(--if));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: pulse 3s ease-in-out infinite;
+}
+
+.auth-subtitle {
+  font-size: 9px;
+  color: var(--ts);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* ══════ Auth Tabs ═════ */.auth-tabs {
+  display: flex;
+  position: relative;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 11px;
+  border-radius: 11px;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--ts);
+  letter-spacing: 0.4px;
+  position: relative;
+  z-index: 1;
+  background: none;
+  border: none;
+}
+
+.auth-tab.active {
+  color: #000;
+}
+
+.auth-tab-indicator {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 8px);
+  height: calc(100% - 8px);
+  background: var(--grad-em);
+  border-radius: 11px;
+  transition: transform var(--transition-slow);
+  box-shadow: 0 4px 14px rgba(0, 255, 136, 0.25);
+  pointer-events: none;
+}
+
+.auth-tab[data-tab="register"].active ~ .auth-tab-indicator {
+  transform: translateX(100%);
+}
+
+/* ══════ Auth Forms ═════ */
+.auth-form {
+  display: none;
+  animation: formSlide 0.3s ease;
+}
+
+.auth-form.active {  display: block;
+}
+
+@keyframes formSlide {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-header {
+  text-align: center;
+}
+
+.form-header h2 {
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.form-header p {
+  font-size: 9px;
+  color: var(--ts);
+}
+
+/* ══════ Input Enhancements ═════ */
+.input-field.valid {
+  border-color: var(--em);
+  background: rgba(0, 255, 136, 0.03);
+}
+
+.input-field.invalid {
+  border-color: var(--dn);
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* ══════ Button Loading State ═════ */
+.btn-loading {
+  display: none;
+}
+.btn-primary.loading .btn-text { display: none; }
+.btn-primary.loading .btn-loading { display: inline-flex; }
+
+/* ══════ Link Inline ═════ */
+.link-inline {
+  background: none;
+  border: none;
+  color: var(--em);
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+}
+
+.link-inline:hover {
+  text-decoration: underline;
+}
+
+/* ══════ Responsive Auth ═════ */
+@media (max-width: 480px) {
+  .auth-wrapper { padding: 16px; }
+  .auth-logo { width: 56px; height: 56px; }
+  .auth-title { font-size: 18px; letter-spacing: 6px; }
+  .auth-tabs { margin-bottom: 20px; }
+}
